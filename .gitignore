@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+models/*.onnx
+models/*.download
+saved_samples/*/
+people.npz
+.migration_done
+settings.json
+benchmark_results/

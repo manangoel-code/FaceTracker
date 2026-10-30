@@ -1,0 +1,696 @@
+/* FaceTracker styles */
+
+/* ---------- Colours and fonts ----------
+   Change these to re-style the whole app.
+   The second block is used when your computer is in dark mode. */
+:root {
+  --paper: #f5f3ee;      /* page background */
+  --box: #fffefb;        /* background of boxes */
+  --ink: #1e1c19;        /* main text */
+  --soft: #706a60;       /* less important text */
+  --rule: #e0dbd1;       /* lines and borders */
+  --track: #e9e5dd;      /* background behind the page buttons */
+  --red: #d2492a;        /* the "recording" red */
+  --green: #2f7d4b;
+  --amber: #c7861a;
+  --sans: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+  --mono: "IBM Plex Mono", Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #151412;
+    --box: #1c1b18;
+    --ink: #ebe7df;
+    --soft: #9c968b;
+    --rule: #34312c;
+    --track: #24221f;
+    --red: #ec6646;
+    --green: #5bb27a;
+  }
+}
+
+
+/* ---------- Basics ---------- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 15px/1.55 var(--sans);
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Small section titles in typewriter letters */
+h2 {
+  font: 500 12px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--soft);
+  margin: 0 0 14px;
+}
+
+p {
+  margin: 8px 0 12px;
+}
+
+code {
+  font: 13px var(--mono);
+}
+
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.muted {
+  color: var(--soft);
+}
+
+.small {
+  font-size: 13px;
+}
+
+.intro {
+  margin: 4px 0 24px;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+
+/* ---------- Top bar ---------- */
+.topbar {
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.topbar-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 58px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 17px;
+}
+
+/* The little red dot before the name, like a camera's record light */
+.rec-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--red);
+  margin-right: 9px;
+}
+
+.camera-status {
+  font: 12px var(--mono);
+  color: var(--soft);
+  margin-left: 14px;
+  padding-left: 14px;
+  border-left: 1px solid var(--rule);
+}
+
+.camera-status.on {
+  color: var(--green);
+}
+
+.camera-status.error {
+  color: var(--red);
+}
+
+/* The page switcher: a grey track, with the open page as a raised white button */
+.tabs {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--track);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.tab {
+  background: none;
+  color: var(--soft);
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tab:hover {
+  color: var(--ink);
+  opacity: 1;
+}
+
+.tab.active {
+  background: var(--box);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+
+/* ---------- Layout ---------- */
+main.wrap {
+  padding-top: 28px;
+  padding-bottom: 60px;
+}
+
+/* Wide column on the left, narrow column on the right */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 28px;
+  align-items: start;
+}
+
+.box {
+  background: var(--box);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.box-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.box-title h2 {
+  margin: 0;
+}
+
+.side-note {
+  padding: 0 4px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
+
+
+/* ---------- Buttons ---------- */
+/* Normal buttons are dark. Add class="plain" for an outlined one. */
+button {
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: 5px;
+  padding: 8px 15px;
+  font: 500 14px var(--sans);
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.85;
+}
+
+button.plain {
+  background: none;
+  color: var(--ink);
+  border-color: var(--rule);
+}
+
+button.plain:hover {
+  border-color: var(--ink);
+  opacity: 1;
+}
+
+button.danger {
+  background: none;
+  color: var(--red);
+  border-color: transparent;
+}
+
+button.danger:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
+.small-button {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+button.wide {
+  width: 100%;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.plain-link {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+
+/* ---------- Form fields ---------- */
+label {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--soft);
+}
+
+input,
+select {
+  display: block;
+  width: 100%;
+  margin-top: 5px;
+  padding: 8px 10px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  font: 15px var(--sans);
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+
+input[type="file"] {
+  font-size: 13px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: var(--ink);
+}
+
+.checkbox input {
+  width: auto;
+  margin: 4px 0 0;
+}
+
+
+/* ---------- Camera page ---------- */
+.viewer {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #0e0e0d;
+  border-radius: 6px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.viewer img {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.offline {
+  text-align: center;
+  color: #8d877c;
+  padding: 20px;
+}
+
+.offline p {
+  font: 13px var(--mono);
+  margin-bottom: 16px;
+}
+
+.offline button {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+  padding: 10px 22px;
+}
+
+/* "LIVE" label in the corner of the video */
+.live-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font: 500 11px var(--mono);
+  letter-spacing: 0.1em;
+  color: #fff;
+  background: var(--red);
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+
+.under-video {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* fps / ms / faces numbers under the video */
+.readout {
+  display: flex;
+  gap: 24px;
+  font: 13px var(--mono);
+  color: var(--soft);
+}
+
+.readout b {
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.key {
+  font-size: 13px;
+  margin: 10px 0 24px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin: 0 5px 0 0;
+}
+
+.swatch.amber {
+  margin-left: 14px;
+}
+
+.swatch.green {
+  background: var(--green);
+}
+
+.swatch.amber {
+  background: var(--amber);
+}
+
+/* The settings box opens and closes when you click its title */
+.settings summary {
+  font: 500 12px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--soft);
+  cursor: pointer;
+}
+
+.settings[open] summary {
+  margin-bottom: 16px;
+}
+
+.capture-status {
+  font: 13px var(--mono);
+  color: var(--green);
+  min-height: 1em;
+  margin: 10px 0 0;
+}
+
+.steps {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.steps li {
+  margin-bottom: 6px;
+}
+
+
+/* ---------- People page ---------- */
+.count {
+  color: var(--ink);
+  margin-left: 6px;
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.person-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.person-samples {
+  font: 12px var(--mono);
+  color: var(--soft);
+  margin-right: 10px;
+}
+
+/* Grid of face pictures (saved samples and imported photos) */
+.face-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 12px;
+}
+
+.face {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.face img,
+.no-image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--rule);
+}
+
+.no-image {
+  display: grid;
+  place-items: center;
+  color: var(--soft);
+  font-size: 12px;
+}
+
+.face small {
+  font: 11px var(--mono);
+  color: var(--soft);
+}
+
+.face select {
+  margin: 0;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
+.face button {
+  align-self: flex-start;
+  padding-left: 0;
+}
+
+.group-list {
+  display: grid;
+  gap: 24px;
+}
+
+.group {
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+}
+
+.group-top {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.group-top label {
+  margin: 0;
+}
+
+.group-top label:first-child {
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
+}
+
+.group-top .checkbox,
+.group-top .muted {
+  padding-bottom: 9px;
+}
+
+
+/* ---------- Benchmark page ---------- */
+.results {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--rule);
+  border-left: 1px solid var(--rule);
+}
+
+.result {
+  padding: 12px 14px;
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.result b {
+  display: block;
+  font: 500 22px var(--mono);
+}
+
+.result small {
+  color: var(--soft);
+  font-size: 12px;
+}
+
+.outcome-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 28px;
+  margin-top: 16px;
+}
+
+.outcome-list div {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 14px;
+}
+
+.outcome-list b {
+  font: 500 14px var(--mono);
+}
+
+
+/* ---------- Help page ---------- */
+.help {
+  max-width: 760px;
+}
+
+.help h2 {
+  margin-top: 36px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+
+.help p {
+  line-height: 1.7;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin: 8px 0 14px;
+}
+
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 9px 10px 9px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+th {
+  font: 500 12px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--soft);
+}
+
+td:first-child {
+  width: 30%;
+  font-weight: 500;
+}
+
+
+/* ---------- Message at the bottom of the screen ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 10px 18px;
+  border-radius: 5px;
+  font-size: 14px;
+  max-width: calc(100vw - 32px);
+  z-index: 20;
+}
+
+.toast.error {
+  background: var(--red);
+  color: #fff;
+}
+
+
+/* ---------- Small screens ---------- */
+@media (max-width: 860px) {
+  .columns,
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .results {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .outcome-list {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar-inner {
+    padding: 10px 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .wrap {
+    padding: 0 14px;
+  }
+
+  .readout {
+    gap: 14px;
+  }
+
+  .person {
+    flex-wrap: wrap;
+  }
+}

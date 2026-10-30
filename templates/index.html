@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FaceTracker</title>
+  <!-- Fonts from Google. Without internet the page uses Segoe UI instead. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- ============ Top bar ============ -->
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="brand">
+      <span class="rec-dot"></span>FaceTracker
+      <span id="cameraStatus" class="camera-status">camera off</span>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="camera" onclick="showTab('camera')">Camera</button>
+      <button class="tab" data-tab="people" onclick="showTab('people')">People</button>
+      <button class="tab" data-tab="benchmark" onclick="showTab('benchmark')">Benchmark</button>
+      <button class="tab" data-tab="help" onclick="showTab('help')">Help</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ Camera ============ -->
+  <section class="page" id="page-camera">
+    <div class="columns">
+      <div>
+        <div class="viewer">
+          <img id="video" alt="Webcam picture">
+          <span id="liveTag" class="live-tag" hidden>LIVE</span>
+          <div id="offline" class="offline">
+            <p id="offlineText">Camera is off</p>
+            <button onclick="startCamera()">Start camera</button>
+          </div>
+        </div>
+
+        <div class="under-video">
+          <div class="readout">
+            <span><b id="fpsValue">-</b> fps</span>
+            <span><b id="latencyValue">-</b> ms per frame</span>
+            <span><b id="faceValue">-</b> faces</span>
+          </div>
+          <button class="plain" onclick="stopCamera()">Stop camera</button>
+        </div>
+
+        <p class="key">
+          <span class="swatch green"></span>known
+          <span class="swatch amber"></span>unknown
+          <span class="muted">&nbsp;The % is how alike the faces are, not how sure the app is.</span>
+        </p>
+
+        <details class="box settings">
+          <summary>Recognition settings</summary>
+          <div class="grid-2">
+            <label>Match threshold
+              <input type="number" id="threshold" step="0.01" min="0.30" max="0.85" value="0.47">
+            </label>
+            <label>Runner-up margin
+              <input type="number" id="margin" step="0.01" min="0" max="0.25" value="0.07">
+            </label>
+            <label>Processing width
+              <select id="width">
+                <option value="480">480 px (fastest)</option>
+                <option value="640" selected>640 px</option>
+                <option value="960">960 px (most detail)</option>
+              </select>
+            </label>
+            <label>Look for faces on
+              <select id="every">
+                <option value="1">Every frame</option>
+                <option value="2">Every 2nd frame</option>
+                <option value="3">Every 3rd frame</option>
+              </select>
+            </label>
+          </div>
+          <button class="plain" onclick="saveSettings()">Apply and save</button>
+          <span class="muted small">&nbsp;Saved settings are kept when you restart the app.</span>
+        </details>
+      </div>
+
+      <aside>
+        <div class="box">
+          <h2>Add someone</h2>
+          <label>Name
+            <input id="name" placeholder="Their name" maxlength="50">
+          </label>
+          <label>Which face?
+            <select id="face">
+              <option value="-1">The only face in view</option>
+            </select>
+          </label>
+          <div class="button-row">
+            <button onclick="autoCapture()">Take 10 samples</button>
+            <button class="plain" onclick="enroll()">Take 1</button>
+          </div>
+          <p id="captureStatus" class="capture-status"></p>
+          <p class="muted small">
+            While the 10 samples are taken (about 5 seconds), slowly turn your head left and right.
+            Always ask before saving someone's face.
+          </p>
+        </div>
+
+        <div class="box">
+          <h2>Quick start</h2>
+          <ol class="steps">
+            <li>Start the camera.</li>
+            <li>Type your name.</li>
+            <li>Press <b>Take 10 samples</b> and turn your head slowly.</li>
+            <li>Your box should turn green.</li>
+          </ol>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ People ============ -->
+  <section class="page" id="page-people" hidden>
+    <h1>People</h1>
+    <p class="muted intro">Everyone you've saved. Open someone to see their samples and remove bad ones.</p>
+
+    <div class="columns">
+      <div>
+        <div class="box">
+          <h2>Saved <span id="peopleCount" class="count">0</span></h2>
+          <div id="peopleList"></div>
+        </div>
+
+        <div class="box" id="samplesCard" hidden>
+          <div class="box-title">
+            <h2 id="samplesTitle">Samples</h2>
+            <button class="plain small-button" onclick="closeSamples()">Close</button>
+          </div>
+          <div id="samplesGrid" class="face-grid"></div>
+        </div>
+      </div>
+
+      <aside>
+        <div class="box">
+          <h2>Import from photos</h2>
+          <p class="muted small">
+            Up to 30 JPG, PNG or WEBP photos. Group photos are fine. Faces that look alike
+            are grouped for you to check. Nothing is saved until you say so.
+          </p>
+          <label>Photos
+            <input id="photoFiles" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+          </label>
+          <label class="checkbox">
+            <input id="photoPermission" type="checkbox">
+            I have permission to use these photos and save the people in them.
+          </label>
+          <button class="wide" onclick="previewPhotos()">Find faces</button>
+          <p id="photoStatus" class="muted small"></p>
+        </div>
+
+        <p class="muted small side-note">
+          Samples are saved in <code>saved_samples</code>, one folder per person.
+        </p>
+      </aside>
+    </div>
+
+    <div class="box" id="reviewCard" hidden>
+      <div class="box-title">
+        <h2>Check the groups</h2>
+        <button onclick="saveGroups()">Save ticked groups</button>
+      </div>
+      <p class="muted small">
+        Each group should be one person. Name each group, move any face that's in the wrong
+        group, and untick groups you don't want.
+      </p>
+      <div id="groupList" class="group-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ Benchmark ============ -->
+  <section class="page" id="page-benchmark" hidden>
+    <h1>Benchmark</h1>
+    <p class="muted intro">Test how well recognition works. Keep one person in view at a time.</p>
+
+    <div class="columns">
+      <div>
+        <div class="box">
+          <h2>Test setup</h2>
+          <div class="grid-2">
+            <label>Who is in view?
+              <select id="expected"></select>
+            </label>
+            <label>Lighting
+              <select id="lighting">
+                <option>Normal lighting</option>
+                <option>Bright lighting</option>
+                <option>Dim lighting</option>
+                <option>Backlit</option>
+              </select>
+            </label>
+            <label>Movement
+              <select id="movement">
+                <option>Still</option>
+                <option>Head turning</option>
+                <option>Walking</option>
+                <option>Entering / leaving</option>
+              </select>
+            </label>
+            <label>Distance
+              <select id="distance">
+                <option>Normal</option>
+                <option>Near</option>
+                <option>Far</option>
+              </select>
+            </label>
+          </div>
+          <label>Notes
+            <input id="testNotes" placeholder="Optional, saved in the CSV file">
+          </label>
+          <div class="button-row">
+            <button onclick="startBenchmark()">Start test</button>
+            <button class="plain" onclick="updateBenchmark()">Update</button>
+            <button class="plain" onclick="stopBenchmark()">Stop</button>
+          </div>
+          <p class="muted small">
+            Start the camera first. When someone walks in or out, change "Who is in view?" and press Update.
+          </p>
+        </div>
+
+        <div class="box">
+          <div class="box-title">
+            <h2>Results</h2>
+            <a class="plain-link" href="/benchmark/export" download>Download CSV</a>
+          </div>
+          <p id="benchmarkStatus" class="muted">No test recorded yet.</p>
+          <div id="resultCards" class="results"></div>
+          <div id="outcomeList" class="outcome-list"></div>
+        </div>
+      </div>
+
+      <aside>
+        <div class="box">
+          <h2>What gets recorded</h2>
+          <p class="small">
+            For every analyzed frame: who should be in view, who was recognized, the result,
+            the similarity, how many faces were found, the face number, speed, processing time,
+            your labels and the current settings.
+          </p>
+          <p class="muted small">The CSV only has numbers and labels, never pictures.</p>
+        </div>
+        <p class="muted small side-note">
+          Results are counted per frame. Frames right after each other are nearly the same,
+          so they aren't really separate tests.
+        </p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ Help ============ -->
+  <section class="page" id="page-help" hidden>
+    <h1>Help</h1>
+    <p class="muted intro">What every page, button and number means.</p>
+
+    <div class="help">
+      <h2>Camera</h2>
+      <p><b>Start camera</b> turns on your webcam and starts looking for faces. A green box means the face matched someone you saved. An amber box means it didn't match anyone closely enough.</p>
+      <p><b>Take 10 samples</b> saves one picture of the face every half second. Turn your head slowly while it runs so the samples are all a bit different. <b>Take 1</b> saves just one. Using a name that already exists adds more samples to that person.</p>
+      <p><b>Face number:</b> a temporary number for each face while the camera is on. It can change when someone leaves the picture.</p>
+      <p><b>The %</b> is how alike the face is to the saved samples. It is <b>not</b> the chance that the name is correct.</p>
+
+      <h2>Recognition settings</h2>
+      <table>
+        <tr><th>Setting</th><th>What changing it does</th></tr>
+        <tr><td>Match threshold</td><td><b>Higher:</b> fewer wrong names, but real people show as unknown more often. <b>Lower:</b> more matches, including some wrong ones.</td></tr>
+        <tr><td>Runner-up margin</td><td><b>Higher:</b> the best match must beat the second best by more, so close calls are rejected. <b>Lower:</b> close calls are accepted.</td></tr>
+        <tr><td>Processing width</td><td><b>Smaller:</b> faster, but small or far away faces are harder to find. <b>Bigger:</b> more detail, but slower.</td></tr>
+        <tr><td>Look for faces on</td><td><b>Every 2nd or 3rd frame:</b> less work for your computer, but names and boxes update more slowly.</td></tr>
+      </table>
+      <p class="muted small">Settings are saved in <code>settings.json</code>. They don't change the models or your saved samples.</p>
+
+      <h2>People</h2>
+      <p><b>Samples</b> shows someone's saved face pictures. <b>Rename</b> changes their name and folder. <b>Delete</b> removes them and all their samples.</p>
+      <p><b>Import from photos:</b> upload some photos and FaceTracker finds the faces and groups the ones that look alike. Use the menu under each face to move it to another group or leave it out. Untick <b>Save</b> to skip a whole group.</p>
+      <p>Scanning new photos replaces groups you haven't saved yet, so save first.</p>
+
+      <h2>Benchmark</h2>
+      <p><b>Who is in view?</b> The person really in front of the camera. For a proper "nobody" test, make sure no one is in view at all.</p>
+      <p><b>Lighting, movement, distance and notes</b> are just labels saved with the results. The app doesn't measure them itself.</p>
+      <p><b>Download CSV</b> saves every recorded frame as a spreadsheet you can open in Excel.</p>
+      <table>
+        <tr><th>Number</th><th>Meaning</th></tr>
+        <tr><td>Accuracy</td><td>The share of frames that got the right result.</td></tr>
+        <tr><td>Precision</td><td>When a name was shown, how often it was the right name.</td></tr>
+        <tr><td>Recall</td><td>When a saved person was in view, how often they were recognized. N/A if no saved person was in the test.</td></tr>
+        <tr><td>Average FPS</td><td>Frames handled per second. Higher is smoother.</td></tr>
+        <tr><td>Avg. processing</td><td>Time spent on each frame, in milliseconds. Lower is faster.</td></tr>
+        <tr><td>Slowest 5%</td><td>95% of frames were processed at least this fast.</td></tr>
+        <tr><td>False matches</td><td>Frames where a face got a name it shouldn't have.</td></tr>
+        <tr><td>Missed faces</td><td>Frames where the expected face wasn't found at all.</td></tr>
+      </table>
+
+      <h2>Privacy and limits</h2>
+      <p>FaceTracker uses two OpenCV models: YuNet finds faces and SFace compares them. Face pictures and face vectors are saved per person in <code>saved_samples/</code>. Everything stays on your computer.</p>
+      <p>It can get things wrong with bad lighting, blur, side-on faces, people who look alike and small photos. Only save faces of people who said yes. This is a hobby project, not a security system.</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- Message shown at the bottom of the screen -->
+<div id="toast" class="toast" hidden></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

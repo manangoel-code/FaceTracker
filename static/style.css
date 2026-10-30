@@ -49,12 +49,8 @@ h1 {
   margin: 0;
 }
 
-/* Small section titles in typewriter letters */
 h2 {
-  font: 500 12px var(--mono);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--soft);
+  font: 600 15px var(--sans);
   margin: 0 0 14px;
 }
 
@@ -86,6 +82,29 @@ code {
 
 [hidden] {
   display: none !important;
+}
+
+/* Browser parts we didn't draw ourselves: text selection, checkboxes, keyboard focus */
+::selection {
+  background: var(--red);
+  color: #fff;
+}
+
+:root {
+  accent-color: var(--ink);
+  caret-color: var(--red);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Numbers line up when they change (fps, results) */
+.readout,
+.results,
+.outcome-list b {
+  font-variant-numeric: tabular-nums;
 }
 
 
@@ -234,6 +253,12 @@ button:hover {
   opacity: 0.85;
 }
 
+/* Shown while a button's job is still running */
+button:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
 button.plain {
   background: none;
   color: var(--ink);
@@ -300,8 +325,11 @@ select {
 
 input:focus,
 select:focus {
-  outline: none;
   border-color: var(--ink);
+}
+
+input::placeholder {
+  color: var(--soft);
 }
 
 input[type="file"] {
@@ -346,13 +374,15 @@ input[type="file"] {
 }
 
 .offline p {
-  font: 13px var(--mono);
+  font-size: 14px;
   margin-bottom: 16px;
 }
 
+/* The video area is always dark, so this red stays the same in light and dark mode
+   (dark enough for white text to be easy to read). */
 .offline button {
-  background: var(--red);
-  border-color: var(--red);
+  background: #c4432a;
+  border-color: #c4432a;
   color: #fff;
   padding: 10px 22px;
 }
@@ -362,10 +392,10 @@ input[type="file"] {
   position: absolute;
   top: 12px;
   left: 12px;
-  font: 500 11px var(--mono);
+  font: 600 11px var(--sans);
   letter-spacing: 0.1em;
   color: #fff;
-  background: var(--red);
+  background: #c4432a;
   padding: 3px 8px;
   border-radius: 3px;
 }
@@ -421,10 +451,7 @@ input[type="file"] {
 
 /* The settings box opens and closes when you click its title */
 .settings summary {
-  font: 500 12px var(--mono);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--soft);
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -451,8 +478,9 @@ input[type="file"] {
 
 /* ---------- People page ---------- */
 .count {
-  color: var(--ink);
-  margin-left: 6px;
+  color: var(--soft);
+  font-weight: 400;
+  margin-left: 4px;
 }
 
 .person {
@@ -603,6 +631,7 @@ input[type="file"] {
 }
 
 .help h2 {
+  font-size: 18px;
   margin-top: 36px;
   padding-top: 16px;
   border-top: 1px solid var(--rule);
@@ -628,9 +657,7 @@ td {
 }
 
 th {
-  font: 500 12px var(--mono);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-weight: 600;
   color: var(--soft);
 }
 
@@ -656,7 +683,7 @@ td:first-child {
 }
 
 .toast.error {
-  background: var(--red);
+  background: #b23a22;  /* fixed dark red so white text stays readable in dark mode */
   color: #fff;
 }
 

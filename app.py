@@ -38,8 +38,28 @@ SAMPLES_FOLDER = APP_FOLDER / "saved_samples"
 SAMPLES_FOLDER.mkdir(exist_ok=True)
 SETTINGS_FILE = APP_FOLDER / "settings.json"
 
+PORT = 5000
+ALLOWED_HOSTS = {f"127.0.0.1:{PORT}", f"localhost:{PORT}"}
+
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 120 * 1024 * 1024  # biggest upload allowed (120 MB)
+
+
+@app.before_request
+def only_this_computer():
+    """Stop other websites from using FaceTracker through your browser."""
+    # A wrong address means a trick ("DNS rebinding") to make another site look like this one.
+    if request.host not in ALLOWED_HOSTS:
+        abort(403)
+    # Browsers say which site sent a request. Refuse changes sent by any other site.
+    origin = request.headers.get("Origin")
+    if request.method != "GET" and origin and origin.split("//")[-1] not in ALLOWED_HOSTS:
+        abort(403)
+
+
+@app.errorhandler(413)
+def upload_too_big(error):
+    return jsonify(error="Those photos are too big together (120 MB max). Try fewer at once."), 413
 
 # The webcam runs in its own thread. The lock stops two parts of the
 # program from changing the same data at the same moment.
@@ -158,29 +178,6 @@ def save_sample(name, embedding, face_image):
     return sample_id
 
 
-def import_old_library():
-    """Older versions kept every face in one people.npz file.
-    This copies them into person folders once, and leaves people.npz as a backup."""
-    old_file = APP_FOLDER / "people.npz"
-    done_file = APP_FOLDER / ".migration_done"
-    if not old_file.exists() or done_file.exists():
-        return
-
-    try:
-        with np.load(old_file) as data:
-            for key in data.files:
-                name = key.replace("person_", "", 1)
-                if not key.startswith("person_") or not is_valid_name(name):
-                    continue
-                for embedding in data[key]:
-                    save_sample(name, np.asarray(embedding, dtype=np.float32).flatten(), None)
-        done_file.write_text("Copied from people.npz. The old file was kept as a backup.\n")
-        print("Copied the old people.npz library into saved_samples.")
-    except Exception as error:
-        print("Could not read the old people.npz library:", error)
-
-
-import_old_library()
 load_people()
 
 
@@ -320,10 +317,18 @@ def camera_loop():
         camera["running"] = True
 
         previous_time = time.monotonic()
+        failed_reads = 0
         while camera["on"]:
             success, frame = webcam.read()
             if not success:
+                # About 2 seconds of failures means the camera was unplugged or taken by another app.
+                failed_reads += 1
+                if failed_reads > 100:
+                    camera["error"] = "Lost the camera. Is it still plugged in?"
+                    break
+                time.sleep(0.02)
                 continue
+            failed_reads = 0
             start_time = time.monotonic()
 
             # Mirror the picture, then shrink it if it's wider than the chosen width.
@@ -578,7 +583,8 @@ def rename_person(name):
             return jsonify(error="Person not found."), 404
         if new_name == name:
             return jsonify(ok=True)
-        if find_existing_name(new_name) != new_name and new_name.lower() != name.lower():
+        # Only a change of upper/lower case may reuse a name; anything else would overwrite someone.
+        if new_name.lower() != name.lower() and find_existing_name(new_name) in people:
             return jsonify(error="That name is already used."), 409
         person_folder(name).rename(person_folder(new_name))
         people[new_name] = people.pop(name)
@@ -865,7 +871,8 @@ def save_photo_groups():
 
 
 if __name__ == "__main__":
-    print("FaceTracker is running at http://127.0.0.1:5000")
+    address = f"http://127.0.0.1:{PORT}"
+    print("FaceTracker is running at", address)
     # Open the page in the browser 1 second from now (once the server has started).
-    threading.Timer(1, webbrowser.open, ["http://127.0.0.1:5000"]).start()
-    app.run(host="127.0.0.1", port=5000, debug=False, threaded=True)
+    threading.Timer(1, webbrowser.open, [address]).start()
+    app.run(host="127.0.0.1", port=PORT, debug=False, threaded=True)

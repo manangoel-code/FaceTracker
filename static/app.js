@@ -73,6 +73,8 @@ function showTab(name) {
   }
   for (const tab of document.querySelectorAll(".tab")) {
     tab.classList.toggle("active", tab.dataset.tab === name);
+    // Tells screen readers which page is open
+    tab.setAttribute("aria-current", tab.dataset.tab === name ? "page" : "false");
   }
   if (name === "benchmark") {
     loadBenchmarkResults();
@@ -151,6 +153,7 @@ let capturing = false;
 async function autoCapture() {
   if (capturing) return;  // already running
   capturing = true;
+  $("captureButton").disabled = true;
   const status = $("captureStatus");
 
   try {
@@ -166,6 +169,7 @@ async function autoCapture() {
 
   status.textContent = "";
   capturing = false;
+  $("captureButton").disabled = false;
   await refresh();
 }
 
@@ -411,6 +415,7 @@ async function previewPhotos() {
   form.append("permission", "yes");
 
   status.textContent = "Looking for faces... this can take a few seconds.";
+  $("findButton").disabled = true;  // stops a second click from uploading twice
   try {
     const response = await fetch("/photo-import/preview", { method: "POST", body: form });
     const result = await response.json();
@@ -423,6 +428,7 @@ async function previewPhotos() {
   } catch (error) {
     status.textContent = error.message;
   }
+  $("findButton").disabled = false;
 }
 
 function showGroups() {

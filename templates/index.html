@@ -97,7 +97,7 @@
             </select>
           </label>
           <div class="button-row">
-            <button onclick="autoCapture()">Take 10 samples</button>
+            <button id="captureButton" onclick="autoCapture()">Take 10 samples</button>
             <button class="plain" onclick="enroll()">Take 1</button>
           </div>
           <p id="captureStatus" class="capture-status"></p>
@@ -155,7 +155,7 @@
             <input id="photoPermission" type="checkbox">
             I have permission to use these photos and save the people in them.
           </label>
-          <button class="wide" onclick="previewPhotos()">Find faces</button>
+          <button id="findButton" class="wide" onclick="previewPhotos()">Find faces</button>
           <p id="photoStatus" class="muted small"></p>
         </div>
 
@@ -309,7 +309,7 @@
 </main>
 
 <!-- Message shown at the bottom of the screen -->
-<div id="toast" class="toast" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="/static/app.js"></script>
 </body>
